@@ -27,8 +27,27 @@ export async function readJson(request: NextRequest): Promise<Record<string, unk
 
 export function isAllowedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get("origin");
+  if (!origin) return process.env.NODE_ENV !== "production";
   const allowed = process.env.ALLOWED_ORIGIN || siteUrl;
-  return origin === allowed;
+  if (origin === allowed) return true;
+  // Cho phép truy cập local trong quá trình phát triển (localhost / IP mạng nội bộ)
+  if (process.env.NODE_ENV !== "production") {
+    try {
+      const url = new URL(origin);
+      if (
+        url.hostname === "localhost" ||
+        url.hostname === "127.0.0.1" ||
+        /^192\.168\./.test(url.hostname) ||
+        /^10\./.test(url.hostname) ||
+        /^172\.(1[6-9]|2\d|3[01])\./.test(url.hostname)
+      ) {
+        return true;
+      }
+    } catch {
+      return false;
+    }
+  }
+  return false;
 }
 
 export function databaseUnavailable(): NextResponse | null {
