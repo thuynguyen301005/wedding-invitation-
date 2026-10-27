@@ -400,38 +400,63 @@ h2 { color: #514437; font-size: clamp(34px, 5vw, 49px); }
 
 .opening-screen { position: fixed; z-index: 100; inset: 0; display: grid; min-height: 100svh; place-items: center; overflow: hidden; padding: 22px; background: radial-gradient(ellipse at 50% 42%, #f2e4d5 0, #ead6c3 65%, #e2cbb7 100%); }
 .opening-screen::before { position: absolute; inset: 0; background: repeating-linear-gradient(5deg, rgba(112, 83, 59, .018) 0, rgba(112, 83, 59, .018) 1px, transparent 1px, transparent 5px); content: ""; pointer-events: none; }
+/* ===== Falling leaves (cover) ===== */
 .falling-leaves { position: absolute; inset: 0; overflow: hidden; pointer-events: none; }
-.falling-leaf { position: absolute; top: -12%; left: var(--leaf-x); width: var(--leaf-size); height: calc(var(--leaf-size) * .56); border-radius: 100% 0 100% 0; background: var(--leaf-color); opacity: .48; transform: rotate(var(--leaf-tilt)); animation: leaf-drift calc(var(--leaf-duration) * 1.5) linear var(--leaf-delay) infinite; }
-.falling-leaf::after { position: absolute; top: 48%; left: 10%; width: 85%; height: 1px; transform: rotate(-14deg); transform-origin: left; background: rgba(103, 78, 57, .36); content: ""; }
-.falling-leaf:nth-child(1) { --leaf-x: 5%; --leaf-size: 13px; --leaf-color: #a48b70; --leaf-duration: 10s; --leaf-delay: -5s; --leaf-tilt: 34deg; }
-.falling-leaf:nth-child(2) { --leaf-x: 12%; --leaf-size: 17px; --leaf-color: #c1a77e; --leaf-duration: 14s; --leaf-delay: -11s; --leaf-tilt: 70deg; }
-.falling-leaf:nth-child(3) { --leaf-x: 19%; --leaf-size: 11px; --leaf-color: #8e7968; --leaf-duration: 12s; --leaf-delay: -2s; --leaf-tilt: 12deg; }
-.falling-leaf:nth-child(4) { --leaf-x: 27%; --leaf-size: 15px; --leaf-color: #b59b78; --leaf-duration: 16s; --leaf-delay: -9s; --leaf-tilt: 115deg; }
-.falling-leaf:nth-child(5) { --leaf-x: 34%; --leaf-size: 10px; --leaf-color: #c3aa85; --leaf-duration: 11s; --leaf-delay: -6s; --leaf-tilt: 45deg; }
-.falling-leaf:nth-child(6) { --leaf-x: 42%; --leaf-size: 18px; --leaf-color: #a58c72; --leaf-duration: 15s; --leaf-delay: -13s; --leaf-tilt: 89deg; }
-.falling-leaf:nth-child(7) { --leaf-x: 49%; --leaf-size: 12px; --leaf-color: #c5aa7f; --leaf-duration: 13s; --leaf-delay: -3s; --leaf-tilt: 20deg; }
-.falling-leaf:nth-child(8) { --leaf-x: 57%; --leaf-size: 15px; --leaf-color: #9e866e; --leaf-duration: 17s; --leaf-delay: -14s; --leaf-tilt: 104deg; }
-.falling-leaf:nth-child(9) { --leaf-x: 64%; --leaf-size: 10px; --leaf-color: #c1a77e; --leaf-duration: 12s; --leaf-delay: -7s; --leaf-tilt: 57deg; }
-.falling-leaf:nth-child(10) { --leaf-x: 71%; --leaf-size: 17px; --leaf-color: #a18a73; --leaf-duration: 14s; --leaf-delay: -4s; --leaf-tilt: 15deg; }
-.falling-leaf:nth-child(11) { --leaf-x: 78%; --leaf-size: 12px; --leaf-color: #c2a77e; --leaf-duration: 18s; --leaf-delay: -16s; --leaf-tilt: 96deg; }
-.falling-leaf:nth-child(12) { --leaf-x: 86%; --leaf-size: 15px; --leaf-color: #927b67; --leaf-duration: 13s; --leaf-delay: -8s; --leaf-tilt: 34deg; }
-.falling-leaf:nth-child(13) { --leaf-x: 93%; --leaf-size: 11px; --leaf-color: #c0a77f; --leaf-duration: 16s; --leaf-delay: -12s; --leaf-tilt: 80deg; }
-.falling-leaf:nth-child(14) { --leaf-x: 9%; --leaf-size: 10px; --leaf-color: #b49a77; --leaf-duration: 19s; --leaf-delay: -17s; --leaf-tilt: 123deg; }
-.falling-leaf:nth-child(15) { --leaf-x: 23%; --leaf-size: 13px; --leaf-color: #8e7968; --leaf-duration: 15s; --leaf-delay: -10s; --leaf-tilt: 26deg; }
-.falling-leaf:nth-child(16) { --leaf-x: 39%; --leaf-size: 12px; --leaf-color: #c2a77e; --leaf-duration: 11s; --leaf-delay: -1s; --leaf-tilt: 74deg; }
-.falling-leaf:nth-child(17) { --leaf-x: 54%; --leaf-size: 16px; --leaf-color: #a18a73; --leaf-duration: 18s; --leaf-delay: -6s; --leaf-tilt: 134deg; }
-.falling-leaf:nth-child(18) { --leaf-x: 68%; --leaf-size: 10px; --leaf-color: #c5aa7f; --leaf-duration: 12s; --leaf-delay: -9s; --leaf-tilt: 42deg; }
-.falling-leaf:nth-child(19) { --leaf-x: 82%; --leaf-size: 14px; --leaf-color: #9b826c; --leaf-duration: 17s; --leaf-delay: -3s; --leaf-tilt: 112deg; }
-.falling-leaf:nth-child(20) { --leaf-x: 97%; --leaf-size: 12px; --leaf-color: #c0a77f; --leaf-duration: 14s; --leaf-delay: -13s; --leaf-tilt: 66deg; }
-.falling-leaf:nth-child(21) { --leaf-x: 31%; --leaf-size: 9px; --leaf-color: #b59b78; --leaf-duration: 20s; --leaf-delay: -15s; --leaf-tilt: 25deg; }
-.falling-leaf:nth-child(22) { --leaf-x: 74%; --leaf-size: 11px; --leaf-color: #a18a73; --leaf-duration: 16s; --leaf-delay: -11s; --leaf-tilt: 140deg; }
-@keyframes leaf-drift {
-  0% { translate: 0 -12vh; rotate: 0deg; }
-  25% { translate: 14px 28vh; rotate: 38deg; }
-  50% { translate: -10px 56vh; rotate: 82deg; }
-  75% { translate: 13px 83vh; rotate: 126deg; }
-  100% { translate: -4px 115vh; rotate: 170deg; }
+.falling-leaves-back { z-index: 1; }
+.falling-leaves-front { z-index: 3; }
+.falling-leaf {
+  position: absolute;
+  top: -14%;
+  left: var(--leaf-x);
+  width: var(--leaf-size);
+  height: calc(var(--leaf-size) * .56);
+  border-radius: 100% 0 100% 0;
+  background: var(--leaf-color);
+  opacity: var(--leaf-opacity, .8);
+  transform: rotate(var(--leaf-tilt));
+  animation: leaf-tumble var(--leaf-duration) linear var(--leaf-delay) infinite;
+  will-change: transform, opacity;
+  transform-origin: center center;
 }
+.falling-leaves-back .falling-leaf {
+  filter: blur(2px);
+  --leaf-opacity: .7;
+  --leaf-size: 9px;
+}
+.falling-leaves-front .falling-leaf {
+  --leaf-size: 16px;
+}
+.falling-leaf::after {
+  position: absolute; top: 48%; left: 10%; width: 85%; height: 1px;
+  transform: rotate(-14deg); transform-origin: left;
+  background: rgba(103, 78, 57, .28); content: "";
+}
+@keyframes leaf-tumble {
+  0%   { transform: translate3d(0, -12vh, 0) scaleX(1) rotate(var(--leaf-tilt)); opacity: 0; }
+  8%   { opacity: var(--leaf-opacity, .8); }
+  22%  { transform: translate3d(calc(var(--leaf-drift) * .22), 20vh, 0) scaleX(.18) rotate(calc(var(--leaf-tilt) + 90deg)); }
+  42%  { transform: translate3d(calc(var(--leaf-drift) * .5), 42vh, 0) scaleX(1) rotate(calc(var(--leaf-tilt) + 180deg)); }
+  62%  { transform: translate3d(calc(var(--leaf-drift) * .78), 64vh, 0) scaleX(.18) rotate(calc(var(--leaf-tilt) + 270deg)); }
+  82%  { transform: translate3d(var(--leaf-drift), 86vh, 0) scaleX(1) rotate(calc(var(--leaf-tilt) + 360deg)); }
+  92%  { opacity: var(--leaf-opacity, .8); }
+  100% { transform: translate3d(var(--leaf-drift), 112vh, 0) scaleX(1) rotate(calc(var(--leaf-tilt) + 360deg)); opacity: 0; }
+}
+.falling-leaves .falling-leaf:nth-child(1) { --leaf-x: 12%; --leaf-duration: 18.7s; --leaf-delay: -20.9s; --leaf-tilt: 319deg; --leaf-drift: 36px; --leaf-color: #a48b70; }
+.falling-leaves .falling-leaf:nth-child(2) { --leaf-x: 34%; --leaf-duration: 16.5s; --leaf-delay: -5.2s; --leaf-tilt: 39deg; --leaf-drift: -59px; --leaf-color: #c1a77e; }
+.falling-leaves .falling-leaf:nth-child(3) { --leaf-x: 9%; --leaf-duration: 23.1s; --leaf-delay: -19.9s; --leaf-tilt: 176deg; --leaf-drift: 57px; --leaf-color: #8e7968; }
+.falling-leaves .falling-leaf:nth-child(4) { --leaf-x: 82%; --leaf-duration: 16.9s; --leaf-delay: -12.7s; --leaf-tilt: 163deg; --leaf-drift: -30px; --leaf-color: #b59b78; }
+.falling-leaves .falling-leaf:nth-child(5) { --leaf-x: 14%; --leaf-duration: 19.9s; --leaf-delay: -13.4s; --leaf-tilt: 3deg; --leaf-drift: 32px; --leaf-color: #c3aa85; }
+.falling-leaves .falling-leaf:nth-child(6) { --leaf-x: 47%; --leaf-duration: 19.6s; --leaf-delay: -21.9s; --leaf-tilt: 12deg; --leaf-drift: -73px; --leaf-color: #a58c72; }
+.falling-leaves .falling-leaf:nth-child(7) { --leaf-x: 44%; --leaf-duration: 16.1s; --leaf-delay: -21.4s; --leaf-tilt: 259deg; --leaf-drift: 80px; --leaf-color: #c5aa7f; }
+.falling-leaves .falling-leaf:nth-child(8) { --leaf-x: 5%; --leaf-duration: 16.3s; --leaf-delay: -8.3s; --leaf-tilt: 300deg; --leaf-drift: -84px; --leaf-color: #9e866e; }
+.falling-leaves .falling-leaf:nth-child(9) { --leaf-x: 7%; --leaf-duration: 21.8s; --leaf-delay: -6.1s; --leaf-tilt: 325deg; --leaf-drift: 63px; --leaf-color: #c1a77e; }
+.falling-leaves .falling-leaf:nth-child(10) { --leaf-x: 67%; --leaf-duration: 22.7s; --leaf-delay: -4.8s; --leaf-tilt: 199deg; --leaf-drift: -69px; --leaf-color: #a18a73; }
+.falling-leaves .falling-leaf:nth-child(11) { --leaf-x: 77%; --leaf-duration: 23.2s; --leaf-delay: -11.5s; --leaf-tilt: 236deg; --leaf-drift: 71px; --leaf-color: #c2a77e; }
+
+@media (prefers-reduced-motion: reduce) {
+  .falling-leaf { animation: none; top: 30%; }
+}
+
 .opening-card { position: relative; z-index: 1; display: flex; width: min(100%, 630px); min-height: 442px; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; padding: 28px 24px 31px; border: 1px solid rgba(135, 113, 90, .17); border-radius: 8px; background: #fdf9f4; box-shadow: 0 18px 48px rgba(68, 49, 34, .36), 0 4px 12px rgba(68, 49, 34, .12); text-align: center; animation: card-appear .8s cubic-bezier(.2,.7,.2,1) both; }
 .opening-card::before { position: absolute; inset: 9px; border: 1px solid rgba(181, 157, 124, .12); border-radius: 4px; content: ""; pointer-events: none; }
 .card-flower { position: absolute; top: -3px; z-index: 0; width: clamp(115px, 21vw, 185px); height: auto; color: #a48965; opacity: .82; }
