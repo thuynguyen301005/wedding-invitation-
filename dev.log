@@ -1,0 +1,32 @@
+
+> wedding-invitation@1.0.0 dev
+> next dev
+
+▲ Next.js 16.4.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.56.1:3000
+- Environments: .env.local
+✓ Ready in 595ms
+✓ Running next.config.ts took 43ms
+
+ GET / 200 in 516ms (next.js: 221ms, application-code: 295ms)
+ GET / 200 in 57ms (next.js: 1.9ms, application-code: 55ms)
+[browser] eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.
+React will never use eval() in production mode 
+[browser] eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.
+React will never use eval() in production mode 
+ GET /api/wishes 200 in 452ms (next.js: 162ms, application-code: 290ms)
+ GET /api/wishes 200 in 122ms (next.js: 4ms, application-code: 118ms)
+ GET /api/wishes 200 in 163ms (next.js: 5ms, application-code: 157ms)
+ GET /api/wishes 200 in 127ms (next.js: 5ms, application-code: 123ms)
+ GET /api/wishes 200 in 114ms (next.js: 4ms, application-code: 110ms)
+ GET /api/wishes 200 in 115ms (next.js: 3ms, application-code: 111ms)
+ GET /api/wishes 200 in 108ms (next.js: 5ms, application-code: 102ms)
+ GET /api/wishes 200 in 128ms (next.js: 5ms, application-code: 123ms)
+ GET / 200 in 136ms (next.js: 3ms, application-code: 133ms)
+[browser] eval() is not supported in this environment. If this page was served with a `Content-Security-Policy` header, make sure that `unsafe-eval` is included. React requires eval() in development mode for various debugging features like reconstructing callstacks from a different environment.
+React will never use eval() in production mode 
+ GET /api/wishes 200 in 1090ms (next.js: 2ms, application-code: 1087ms)
+ GET /api/wishes 200 in 122ms (next.js: 2ms, application-code: 119ms)
+ GET /api/wishes 200 in 201ms (next.js: 4ms, application-code: 198ms)
+ GET /api/wishes 200 in 113ms (next.js: 1.2ms, application-code: 112ms)
