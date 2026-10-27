@@ -2,6 +2,7 @@
 
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState, useImperativeHandle } from "react";
 import Image from "next/image";
+import Guestbook from "@/components/Guestbook";
 import type { wedding as WeddingConfig } from "@/config/wedding";
 
 type Wedding = typeof WeddingConfig;
@@ -665,68 +666,7 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
 
       {/* RSVP moved to modal triggered by "Xác nhận tham dự" button */}
 
-      <section className="guestbook-section section" id="wishes" aria-labelledby="guestbook-title">
-        <article className="guestbook-card">
-          <BotanicalSprig className="guestbook-sprig guestbook-sprig-left" />
-          <BotanicalSprig className="guestbook-sprig guestbook-sprig-right" />
-          <h2 id="guestbook-title">Sổ lưu bút</h2>
-          <form className="guestbook-form" onSubmit={submitWish} noValidate>
-            <div className="field">
-              <input
-                id="wish-name"
-                autoComplete="name"
-                maxLength={100}
-                value={wishDraft.name}
-                onChange={(event) => setWishDraft({ ...wishDraft, name: event.target.value })}
-                placeholder="Nhập tên*"
-                aria-label="Tên của bạn"
-                aria-invalid={Boolean(wishErrors.name)}
-                aria-describedby={wishErrors.name ? "wish-name-error" : undefined}
-              />
-              {wishErrors.name && <small className="field-error" id="wish-name-error">{wishErrors.name}</small>}
-            </div>
-            <div className="field">
-              <textarea
-                id="wish-content"
-                rows={4}
-                maxLength={500}
-                value={wishDraft.content}
-                onChange={(event) => setWishDraft({ ...wishDraft, content: event.target.value })}
-                placeholder="Nhập lời chúc*"
-                aria-label="Lời chúc"
-                aria-invalid={Boolean(wishErrors.content)}
-                aria-describedby={wishErrors.content ? "wish-content-error" : undefined}
-              />
-              {wishErrors.content && <small className="field-error" id="wish-content-error">{wishErrors.content}</small>}
-            </div>
-            <label className="honeypot" aria-hidden="true">Để trống<input tabIndex={-1} autoComplete="off" value={wishesHoneypot} onChange={(event) => setWishesHoneypot(event.target.value)} /></label>
-            <div className="guestbook-submit-row">
-              <button className="button button-dark submit-button" type="submit" disabled={wishState === "sending"}>
-                {wishState === "sending" ? "Đang gửi…" : "Gửi lời chúc"}
-              </button>
-            </div>
-            {wishMessage && <Notice state={wishState}>{wishMessage}</Notice>}
-          </form>
-          <div className="guestbook-wishes" aria-live="polite">
-            {loadingWishes && <p className="guestbook-empty">Đang tải những lời chúc…</p>}
-            {wishesError && <div className="guestbook-empty"><p>{wishesError}</p><button className="text-button" type="button" onClick={() => void loadWishes()}>Thử tải lại</button></div>}
-            {!loadingWishes && !wishesError && wishes.length === 0 && <p className="guestbook-empty">Chưa có lời chúc nào. Hãy là người đầu tiên!</p>}
-            {wishes.map((wish, index) => (
-              <article className="guestbook-wish" key={wish.id} ref={index === 0 ? latestWishRef : undefined}>
-                <div className="guestbook-wish-heading">
-                  <strong>{wish.senderName}</strong>
-                  <time dateTime={wish.createdAt}>
-                    {new Intl.DateTimeFormat("vi-VN", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }).format(new Date(wish.createdAt))}
-                  </time>
-                </div>
-                <p>{wish.content}</p>
-              </article>
-            ))}
-            {hasMoreWishes && <button className="button button-outline load-more" disabled={loadingWishes} onClick={() => void loadWishes(wishCursor)}>Xem thêm lời chúc</button>}
-          </div>
-          <p className="guestbook-signoff">Sự hiện diện của quý khách là niềm vinh hạnh của gia đình chúng tôi!</p>
-        </article>
-      </section>
+      <Guestbook />
 
       <footer className="site-footer"><span>{wedding.bride} & {wedding.groom}</span><span>{wedding.dateLabel}</span><a href="#home">Trở về đầu trang ↑</a></footer>
 

@@ -32,7 +32,7 @@ export function isAllowedOrigin(request: NextRequest): boolean {
 }
 
 export function databaseUnavailable(): NextResponse | null {
-  return process.env.SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+  return (process.env.SUPABASE_URL && (process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY))
     ? null
     : jsonError("Dịch vụ chưa được cấu hình. Vui lòng thử lại sau.", 503);
 }

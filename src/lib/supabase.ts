@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 export function getSupabase() {
   const url = process.env.SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) {
     throw new Error("Server database configuration is missing");
   }
