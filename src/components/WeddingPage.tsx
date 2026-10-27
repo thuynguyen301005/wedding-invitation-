@@ -142,16 +142,19 @@ function Notice({ state, children }: { state: FormState; children: React.ReactNo
 
 export type WeddingPageHandle = { playMusic: () => Promise<void> };
 
-const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: string }>(
-  function WeddingPage({ wedding }, ref) {
+const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: string; audioRef?: React.RefObject<HTMLAudioElement | null>; musicOn?: boolean; onMusicOnChange?: (value: boolean) => void }>(
+  function WeddingPage({ wedding, audioRef: externalAudioRef, musicOn: musicOnProp, onMusicOnChange }, ref) {
   const [guestToken, setGuestToken] = useState("");
   const [hasPreviousRsvp, setHasPreviousRsvp] = useState(false);
   const [toast, setToast] = useState("");
   const [activeAlbumIndex, setActiveAlbumIndex] = useState(() => Math.max(0, Math.min(1, wedding.photos.length - 1)));
   const [rsvpOpen, setRsvpOpen] = useState(false);
-  const [musicOn, setMusicOn] = useState(false);
+  const [musicOnState, setMusicOnState] = useState(false);
+  const musicOn = musicOnProp ?? musicOnState;
+  const setMusicOn = onMusicOnChange ?? setMusicOnState;
   const [musicError, setMusicError] = useState("");
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const internalAudioRef = useRef<HTMLAudioElement | null>(null);
+  const audioRef = externalAudioRef ?? internalAudioRef;
   const [rsvpDraft, setRsvpDraft, clearRsvpDraft] = useDraft("wedding-rsvp-draft", {
     name: "",
     attendanceStatus: "yes",
@@ -407,16 +410,30 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
   }, [wedding.musicUrl]);
 
   async function toggleMusic() {
-    if (musicOn) {
-      audioRef.current?.pause();
-      setMusicOn(false);
-      setMusicError("");
+    if (!audioRef.current) {
+      await startMusic();
+      return;
+    }
+    const audio = audioRef.current;
+    if (!audio.paused) {
+      audio.pause();
       return;
     }
     await startMusic();
   }
 
-  useImperativeHandle(ref, () => ({ playMusic: startMusic }), [startMusic]);
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const handlePlay = () => setMusicOn(true);
+    const handlePause = () => setMusicOn(false);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+    return () => {
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+    };
+  }, [audioRef]);
 
   const directionsUrl = wedding.venue.googleMapsUrl;
   const calendarDate = (date: Date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
