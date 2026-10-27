@@ -14,9 +14,15 @@ export default function InvitationCover({ wedding, invitee, onOpen }: { wedding:
 
   return (
     <section className="opening-screen" aria-label="Thiệp mời đám cưới">
+      <div className="ambient-light" aria-hidden="true" />
       <div className="falling-leaves falling-leaves-back" aria-hidden="true">
         {Array.from({ length: 11 }, (_, index) => (
           <span className="falling-leaf" key={`b-${index}`} />
+        ))}
+      </div>
+      <div className="falling-dust" aria-hidden="true">
+        {Array.from({ length: 26 }, (_, index) => (
+          <span className="dust-particle" key={`d-${index}`} />
         ))}
       </div>
       <div className="falling-leaves falling-leaves-front" aria-hidden="true">
