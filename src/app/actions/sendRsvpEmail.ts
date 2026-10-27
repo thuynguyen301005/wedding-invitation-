@@ -15,7 +15,7 @@ export async function sendRsvpEmail(formData: FormData) {
   try {
     const { error } = await resend.emails.send({
       from: "onboarding@resend.dev",
-      to: "email-cua-co-dau@example.com",
+      to: "thuthuy205.hanu@gmail.com",
       subject: `💌 ${name} đã xác nhận tham gia`,
       html: `
         <div style="font-family:Arial,sans-serif;line-height:1.6;color:#302b28">
