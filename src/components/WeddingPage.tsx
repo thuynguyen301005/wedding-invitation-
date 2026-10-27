@@ -668,8 +668,6 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
 
       <Guestbook />
 
-      <footer className="site-footer"><span>{wedding.bride} & {wedding.groom}</span><span>{wedding.dateLabel}</span><a href="#home">Trở về đầu trang ↑</a></footer>
-
       <div className="floating-controls">
         <button className="floating-button" type="button" onClick={() => void toggleMusic()} aria-label={musicOn ? "Tắt nhạc nền" : "Bật nhạc nền"} aria-pressed={musicOn}>{musicOn ? "♫" : "♪"}</button>
         <a className="floating-button" href="#details" aria-label="Cuộn đến thông tin lễ cưới">⌖</a>
