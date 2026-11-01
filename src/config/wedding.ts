@@ -43,16 +43,84 @@ export const wedding = {
     "https://images.unsplash.com/photo-1537633552985-df8429e8048b?auto=format&fit=crop&w=1800&q=82",
   photos: [
     {
-      src: "/album-ngan8325.jpg",
-      alt: "Cô dâu chú rể trong trang phục cưới",
+      src: "/album/album-02-ngan8150.webp",
+      alt: "Cô dâu chú rể trong trang phục cưới bên khung cửa xanh",
     },
     {
-      src: "/album-ngan8260.jpg",
-      alt: "Cô dâu chú rể đứng cạnh nhau giữa hoa",
+      src: "/album/album-14-ngan8559.webp",
+      alt: "Cô dâu trong áo dài đỏ bên phông lễ gia tiên",
     },
     {
-      src: "/album-ngan8042.jpg",
-      alt: "Cô dâu chú rể trao nhau ánh nhìn",
+      src: "/album/album-03-ngan8042.webp",
+      alt: "Cô dâu cầm hoa và chú rể nhìn cô trìu mến",
+    },
+    {
+      src: "/album/album-01-ngan8169.webp",
+      alt: "Cô dâu chú rể trao nhau nụ hôn và nhẫn cưới",
+    },
+    {
+      src: "/album/album-15-ngan8542.webp",
+      alt: "Cô dâu chú rể trong áo dài đỏ",
+    },
+    {
+      src: "/album/album-10-ngan8034-aa4.webp",
+      alt: "Cô dâu chú rể giữa khung hoa trắng",
+    },
+    {
+      src: "/album/album-19-ngan8260.webp",
+      alt: "Cô dâu chú rể khoe nhẫn cưới và hoa cưới",
+    },
+    {
+      src: "/album/album-16-ngan8529.webp",
+      alt: "Cô dâu chú rể bên phông lễ gia tiên",
+    },
+    {
+      src: "/album/album-08-ngan8034-aa8.webp",
+      alt: "Cô dâu cầm bó hoa tulip trắng",
+    },
+    {
+      src: "/album/album-18-ngan8325.webp",
+      alt: "Cô dâu chú rể trong lễ phục trên nền tối",
+    },
+    {
+      src: "/album/album-17-ngan8496.webp",
+      alt: "Cô dâu chú rể vui vẻ bên phông lễ gia tiên",
+    },
+    {
+      src: "/album/album-20-ngan8210.webp",
+      alt: "Cô dâu chú rể bên khung hoa trắng",
+    },
+    {
+      src: "/album/album-04-ngan8034-ap6.webp",
+      alt: "Cô dâu chú rể chụp ảnh trên phông nền tối",
+    },
+    {
+      src: "/album/album-06-ngan8034-aa10.webp",
+      alt: "Cô dâu chú rể trong trang phục áo dài đỏ",
+    },
+    {
+      src: "/album/album-12-ngan8034-aa2.webp",
+      alt: "Khoảnh khắc cô dâu chú rể trao nhau ánh nhìn",
+    },
+    {
+      src: "/album/album-11-ngan8034-aa3.webp",
+      alt: "Cô dâu chú rể tạo dáng giữa khung hoa",
+    },
+    {
+      src: "/album/album-05-ngan8034-ap5.webp",
+      alt: "Cô dâu chú rể đứng bên nhau trong lễ phục",
+    },
+    {
+      src: "/album/album-07-ngan8034-aa9.webp",
+      alt: "Chú rể trong bộ vest đen",
+    },
+    {
+      src: "/album/album-13-ngan8034-aa1.webp",
+      alt: "Cô dâu chú rể nhìn nhau bên cửa sổ",
+    },
+    {
+      src: "/album/album-09-ngan8034-aa6.webp",
+      alt: "Cô dâu chú rể đứng bên nhau trên phông nền tối",
     },
   ],
   venue: {
