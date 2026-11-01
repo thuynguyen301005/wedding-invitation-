@@ -37,6 +37,8 @@ export const wedding = {
   },
   invitation:
     "Bằng tất cả yêu thương, chúng mình trân trọng kính mời bạn đến chung vui trong ngày hạnh phúc.",
+  rsvpFormUrl:
+    "https://docs.google.com/forms/d/e/1FAIpQLSf9hCb1naz61-LD0u2QVmqlHIag9TBpr-3xwrAi2kQWWQGlwg/viewform?embedded=true",
   story:
     "Từ một lần gặp gỡ tình cờ đến quyết định cùng nhau đi hết cuộc đời. Chúng mình mong ngày vui sẽ trọn vẹn hơn khi có bạn ở bên.",
   coverImage:

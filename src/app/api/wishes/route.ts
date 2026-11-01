@@ -36,6 +36,15 @@ function toPublicWish(wish: WishRow | LegacyWishRow) {
       };
 }
 
+type PublicWish = ReturnType<typeof toPublicWish>;
+
+function publicWishesResponse(wishes: PublicWish[]) {
+  return NextResponse.json(
+    { wishes },
+    { headers: { "Cache-Control": "public, s-maxage=15, stale-while-revalidate=15" } },
+  );
+}
+
 export async function GET() {
   const unavailable = databaseUnavailable();
   if (unavailable) return unavailable;
@@ -56,17 +65,13 @@ export async function GET() {
       console.error("wishes_fetch_failed", legacy.error.code, legacy.error.message);
       return jsonError("Chưa thể tải lời chúc. Vui lòng thử lại sau.", 503);
     }
-    return NextResponse.json({
-      wishes: ((legacy.data as LegacyWishRow[] | null) || []).map(toPublicWish),
-    });
+    return publicWishesResponse(((legacy.data as LegacyWishRow[] | null) || []).map(toPublicWish));
   }
   if (error) {
     console.error("wishes_fetch_failed", error.code, error.message, error.details, error.hint);
     return jsonError("Chưa thể tải lời chúc. Vui lòng thử lại sau.", 503);
   }
-  return NextResponse.json({
-    wishes: ((data as WishRow[] | null) || []).map(toPublicWish),
-  });
+  return publicWishesResponse(((data as WishRow[] | null) || []).map(toPublicWish));
 }
 
 export async function POST(request: NextRequest) {

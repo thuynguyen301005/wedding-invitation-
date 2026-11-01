@@ -998,15 +998,11 @@ body { font-size: 16px; }
 @keyframes fade-in-up { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 .fade-in-up { animation: fade-in-up .4s ease both; }
 .rsvp-modal-backdrop { position: fixed; inset: 0; z-index: 200; display: grid; place-items: center; padding: 20px; background: rgba(32, 24, 18, .55); backdrop-filter: blur(2px); }
-.rsvp-modal { position: relative; width: min(100%, 460px); max-height: 90svh; overflow: auto; padding: 28px 24px 24px; border-radius: 12px; background: #fdf9f4; box-shadow: 0 24px 60px rgba(32, 24, 18, .35); }
+.rsvp-modal { position: relative; width: min(100%, 700px); max-height: 90svh; overflow: auto; padding: 28px 24px 24px; border-radius: 12px; background: #fdf9f4; box-shadow: 0 24px 60px rgba(32, 24, 18, .35); }
 .rsvp-modal-close { position: absolute; top: 10px; right: 14px; border: 0; background: transparent; font-size: 26px; line-height: 1; color: #7a6a5c; cursor: pointer; }
 .rsvp-modal h2 { margin: 6px 0 4px; font-family: var(--serif); font-size: 24px; color: #3a2f28; }
 .rsvp-modal .eyebrow { margin: 0 0 2px; color: #8c6a60; }
 .rsvp-modal-subtitle { margin: 0 0 14px; color: #7a6a5c; font-size: 14px; }
-.rsvp-modal .rsvp-form { display: grid; gap: 12px; }
-.rsvp-modal .field { display: grid; gap: 4px; }
-.rsvp-modal .field label { font-size: 14px; color: #4a3f37; }
-.rsvp-modal .radio-options { display: flex; gap: 16px; flex-wrap: wrap; }
-.rsvp-modal .submit-button { width: 100%; }
-.rsvp-modal .field-error { color: #b00020; font-size: 12px; }
+.rsvp-form-embed { display: block; width: 100%; height: min(70svh, 680px); min-height: 420px; border: 0; background: #fff; }
+.rsvp-form-fallback { display: inline-block; margin-top: 12px; color: var(--rose-dark); font-size: 12px; text-underline-offset: 3px; }
 @media (max-width: 480px) { .rsvp-modal { padding: 22px 16px 18px; } }

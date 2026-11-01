@@ -22,8 +22,15 @@ export async function GET(request: NextRequest) {
   }
   const notifications = (data || []) as RsvpForSheet[];
   const results = await Promise.all(notifications.map((rsvp) => syncRsvpToSheet(rsvp)));
+  const { data: cleanedRows, error: cleanupError } = await getSupabase().rpc("cleanup_expired_request_data", {
+    p_limit: 5000,
+  });
+  if (cleanupError) {
+    console.error("expired_request_data_cleanup_failed", cleanupError.code);
+  }
   return NextResponse.json({
     processed: notifications.length,
     synced: results.filter((status) => status === "sent").length,
-  });
+    cleanedRows: cleanupError ? null : cleanedRows,
+  }, { status: cleanupError ? 503 : 200 });
 }

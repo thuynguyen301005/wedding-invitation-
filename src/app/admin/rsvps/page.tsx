@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import RsvpAdmin from "@/components/RsvpAdmin";
 
 export const metadata: Metadata = {
@@ -6,6 +7,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RsvpAdminPage() {
+export default async function RsvpAdminPage() {
+  await connection();
   return <RsvpAdmin />;
 }

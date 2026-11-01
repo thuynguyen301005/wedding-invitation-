@@ -4,26 +4,10 @@ import { siteUrl } from "@/config/wedding";
 import { getSupabase } from "@/lib/supabase";
 import { isRequestOriginAllowed } from "@/lib/origin";
 
-export const MAX_BODY_BYTES = 10 * 1024;
+export { MAX_BODY_BYTES, readJson } from "./read-json";
 
 export function jsonError(message: string, status: number, fields?: Record<string, string>) {
   return NextResponse.json({ error: message, ...(fields ? { fields } : {}) }, { status });
-}
-
-export async function readJson(request: NextRequest): Promise<Record<string, unknown> | null> {
-  if (!request.headers.get("content-type")?.toLowerCase().includes("application/json")) return null;
-  const contentLength = Number(request.headers.get("content-length") || 0);
-  if (contentLength > MAX_BODY_BYTES) return null;
-  const text = await request.text();
-  if (new TextEncoder().encode(text).byteLength > MAX_BODY_BYTES) return null;
-  try {
-    const value: unknown = JSON.parse(text);
-    return value && typeof value === "object" && !Array.isArray(value)
-      ? (value as Record<string, unknown>)
-      : null;
-  } catch {
-    return null;
-  }
 }
 
 export function isAllowedOrigin(request: NextRequest): boolean {

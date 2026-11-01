@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, useCallback, useEffect, useMemo, useRef, useState, useImperativeHandle } from "react";
+import { forwardRef, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Guestbook from "@/components/Guestbook";
 import type { wedding as WeddingConfig } from "@/config/wedding";
@@ -133,20 +133,11 @@ function BotanicalSprig({ className = "" }: { className?: string }) {
   );
 }
 
-function Notice({ state, children }: { state: FormState; children: React.ReactNode }) {
-  return (
-    <p className={`notice notice-${state}`} role={state === "error" ? "alert" : "status"} aria-live="polite">
-      {children}
-    </p>
-  );
-}
-
 export type WeddingPageHandle = { playMusic: () => Promise<void> };
 
 const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: string; audioRef?: React.RefObject<HTMLAudioElement | null>; musicOn?: boolean; onMusicOnChange?: (value: boolean) => void }>(
   function WeddingPage({ wedding, audioRef: externalAudioRef, musicOn: musicOnProp, onMusicOnChange }, ref) {
   const [guestToken, setGuestToken] = useState("");
-  const [hasPreviousRsvp, setHasPreviousRsvp] = useState(false);
   const [toast, setToast] = useState("");
   const [activeAlbumIndex, setActiveAlbumIndex] = useState(() => Math.max(0, Math.min(1, wedding.photos.length - 1)));
   const [rsvpOpen, setRsvpOpen] = useState(false);
@@ -156,14 +147,7 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
   const [musicError, setMusicError] = useState("");
   const internalAudioRef = useRef<HTMLAudioElement | null>(null);
   const audioRef = externalAudioRef ?? internalAudioRef;
-  const [rsvpDraft, setRsvpDraft, clearRsvpDraft] = useDraft("wedding-rsvp-draft", {
-    name: "",
-    attendanceStatus: "yes",
-    guestCount: "2",
-    message: "",
-  });
   const [wishDraft, setWishDraft, clearWishDraft] = useDraft("wedding-wish-draft", { name: "", content: "" });
-  const [rsvpState, setRsvpState] = useState<FormState>("idle");
 
   useEffect(() => {
     if (wedding.photos.length < 2) return;
@@ -174,8 +158,6 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
   }, [wedding.photos.length]);
 
   const [wishState, setWishState] = useState<FormState>("idle");
-  const [rsvpMessage, setRsvpMessage] = useState("");
-  const [rsvpErrors, setRsvpErrors] = useState<Record<string, string>>({});
   const [wishMessage, setWishMessage] = useState("");
   const [wishErrors, setWishErrors] = useState<Record<string, string>>({});
   const [wishes, setWishes] = useState<Wish[]>([]);
@@ -185,24 +167,17 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
   const [hasMoreWishes, setHasMoreWishes] = useState(false);
   const [loadingWishes, setLoadingWishes] = useState(true);
   const [wishesError, setWishesError] = useState("");
-  const [honeypot, setHoneypot] = useState("");
   const [wishesHoneypot, setWishesHoneypot] = useState("");
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setGuestToken(getDeviceToken());
-      try {
-        setHasPreviousRsvp(localStorage.getItem("wedding-rsvp-saved") === "true");
-      } catch {
-        setHasPreviousRsvp(false);
-      }
       const invitedName = new URLSearchParams(window.location.search).get("to")?.trim().slice(0, 60);
       if (invitedName) {
-        setRsvpDraft((draft) => ({ ...draft, name: draft.name || invitedName }));
         setWishDraft((draft) => ({ ...draft, name: draft.name || invitedName }));
       }
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [setRsvpDraft, setWishDraft]);
+  }, [setWishDraft]);
 
 
   useEffect(() => {
@@ -239,101 +214,6 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadWishes();
   }, []);
-
-  async function submitRsvp(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setRsvpErrors({});
-    const name = rsvpDraft.name.trim();
-    const message = rsvpDraft.message.trim();
-    const currentGuestToken = guestToken || getDeviceToken();
-    const errors: Record<string, string> = {};
-    if (!name || name.length > 100) errors.name = "Vui lòng nhập họ tên (tối đa 100 ký tự).";
-    if (rsvpDraft.attendanceStatus === "yes" && (!/^\d+$/.test(rsvpDraft.guestCount) || +rsvpDraft.guestCount < 1 || +rsvpDraft.guestCount > 10)) {
-      errors.guestCount = "Số người tham dự từ 1 đến 10.";
-    }
-    if (message.length > 500) errors.message = "Lời nhắn tối đa 500 ký tự.";
-    if (Object.keys(errors).length) {
-      setRsvpErrors(errors);
-      setRsvpState("error");
-      return;
-    }
-    setRsvpState("sending");
-    setRsvpMessage("Đang gửi xác nhận…");
-    const keyStorage = "wedding-rsvp-idempotency-key";
-    const fingerprint = JSON.stringify([
-      name,
-      rsvpDraft.attendanceStatus,
-      rsvpDraft.attendanceStatus === "yes" ? Number(rsvpDraft.guestCount) : 0,
-      message,
-      currentGuestToken,
-    ]);
-    let idempotencyKey: string;
-    try {
-      const previous = JSON.parse(localStorage.getItem(keyStorage) || "null") as
-        | { fingerprint: string; key: string }
-        | null;
-      idempotencyKey = previous?.fingerprint === fingerprint ? previous.key : crypto.randomUUID();
-      localStorage.setItem(keyStorage, JSON.stringify({ fingerprint, key: idempotencyKey }));
-    } catch {
-      idempotencyKey = crypto.randomUUID();
-    }
-    try {
-      const response = await fetch("/api/rsvp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          attendanceStatus: rsvpDraft.attendanceStatus,
-          guestCount: Number(rsvpDraft.guestCount),
-          message,
-          guestToken: currentGuestToken,
-          idempotencyKey,
-          website: honeypot,
-        }),
-      });
-      const payload = (await response.json()) as {
-        message?: string;
-        error?: string;
-        fields?: Record<string, string>;
-        notificationStatus?: "sent" | "pending" | "failed" | "not_required";
-      };
-      if (!response.ok) {
-        setRsvpErrors(payload.fields || {});
-        throw new Error(payload.error || "Chưa thể gửi xác nhận. Vui lòng thử lại.");
-      }
-      setRsvpState("success");
-      const notificationMessage =
-        payload.notificationStatus === "sent"
-          ? "Đã lưu xác nhận vào danh sách của cô dâu chú rể."
-          : payload.notificationStatus === "pending"
-            ? "Đã lưu xác nhận. Danh sách đang được cập nhật, hệ thống sẽ tự thử lại."
-            : payload.notificationStatus === "failed"
-              ? "Đã lưu xác nhận, nhưng chưa cập nhật được danh sách. Vui lòng báo cô dâu chú rể."
-              : "Đã ghi nhận xác nhận của bạn.";
-      setToast(
-        payload.notificationStatus === "failed"
-          ? "Đã lưu xác nhận, nhưng danh sách chưa cập nhật được."
-          : "Cảm ơn bạn đã xác nhận tham gia!",
-      );
-      setRsvpOpen(false);
-      setRsvpMessage(notificationMessage);
-      setHasPreviousRsvp(true);
-      try {
-        localStorage.setItem("wedding-rsvp-saved", "true");
-      } catch {
-        // Device storage is optional.
-      }
-      clearRsvpDraft();
-      try {
-        localStorage.removeItem(keyStorage);
-      } catch {
-        // Idempotency remains protected by the server-side token even without storage.
-      }
-    } catch (error) {
-      setRsvpState("error");
-      setRsvpMessage(error instanceof Error ? error.message : "Chưa thể gửi xác nhận. Vui lòng thử lại.");
-    }
-  }
 
   async function submitWish(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -395,7 +275,7 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
     }
   }
 
-  const startMusic = useCallback(async () => {
+  async function startMusic() {
     if (!wedding.musicUrl) {
       setMusicError("Nhạc nền chưa được cấu hình.");
       return;
@@ -418,7 +298,7 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
       setMusicOn(false);
       setMusicError("Trình duyệt chưa cho phép phát nhạc. Bạn có thể tiếp tục sử dụng thiệp bình thường.");
     }
-  }, [wedding.musicUrl]);
+  }
 
   async function toggleMusic() {
     if (!audioRef.current) {
@@ -444,7 +324,7 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
       audio.removeEventListener("play", handlePlay);
       audio.removeEventListener("pause", handlePause);
     };
-  }, [audioRef]);
+  }, [audioRef, setMusicOn]);
 
   const directionsUrl = wedding.venue.googleMapsUrl;
   const calendarDate = (date: Date) => date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
@@ -684,60 +564,21 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
       </div>
       {musicError && <p className="music-status" role="status">{musicError}</p>}
       {rsvpOpen && (
-        <div className="rsvp-modal-backdrop" role="dialog" aria-modal="true" onClick={() => setRsvpOpen(false)}>
+        <div className="rsvp-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="rsvp-modal-title" onClick={() => setRsvpOpen(false)}>
           <div className="rsvp-modal" onClick={(event) => event.stopPropagation()}>
             <button className="rsvp-modal-close" type="button" onClick={() => setRsvpOpen(false)} aria-label="Đóng">×</button>
             <p className="eyebrow">THƯ MỜI</p>
-            <h2>Xác nhận tham dự</h2>
+            <h2 id="rsvp-modal-title">Xác nhận tham dự</h2>
             <p className="rsvp-modal-subtitle">Vui lòng xác nhận để chúng mình chuẩn bị chu đáo hơn nhé.</p>
-            <form className="rsvp-form" onSubmit={submitRsvp} noValidate>
-              <div className="field">
-                <label htmlFor="rsvp-name">Họ và tên <span>*</span></label>
-                <input
-                  id="rsvp-name"
-                  autoComplete="name"
-                  maxLength={100}
-                  value={rsvpDraft.name}
-                  onChange={(event) => setRsvpDraft({ ...rsvpDraft, name: event.target.value })}
-                  aria-invalid={Boolean(rsvpErrors.name)}
-                />
-                {rsvpErrors.name && <small className="field-error">{rsvpErrors.name}</small>}
-              </div>
-              <fieldset className="field">
-                <legend>Bạn sẽ đến chứ? <span>*</span></legend>
-                <div className="radio-options">
-                  <label><input type="radio" name="attendance" value="yes" checked={rsvpDraft.attendanceStatus === "yes"} onChange={() => setRsvpDraft({ ...rsvpDraft, attendanceStatus: "yes" })} /><span>Chắc chắn tham dự</span></label>
-                  <label><input type="radio" name="attendance" value="no" checked={rsvpDraft.attendanceStatus === "no"} onChange={() => setRsvpDraft({ ...rsvpDraft, attendanceStatus: "no" })} /><span>Rất tiếc, không thể</span></label>
-                </div>
-              </fieldset>
-              {rsvpDraft.attendanceStatus === "yes" && (
-                <div className="field">
-                  <label htmlFor="guest-count">Số người <span>*</span></label>
-                  <select
-                    id="guest-count"
-                    value={rsvpDraft.guestCount}
-                    onChange={(event) => setRsvpDraft({ ...rsvpDraft, guestCount: event.target.value })}
-                  >
-                    {Array.from({ length: 10 }, (_, index) => <option key={index + 1} value={index + 1}>{index + 1} người</option>)}
-                  </select>
-                </div>
-              )}
-              <div className="field">
-                <label htmlFor="rsvp-message">Lời nhắn <span className="optional">(không bắt buộc)</span></label>
-                <textarea
-                  id="rsvp-message"
-                  rows={2}
-                  maxLength={500}
-                  value={rsvpDraft.message}
-                  onChange={(event) => setRsvpDraft({ ...rsvpDraft, message: event.target.value })}
-                />
-              </div>
-              <label className="honeypot" aria-hidden="true">Để trống<input tabIndex={-1} autoComplete="off" value={honeypot} onChange={(event) => setHoneypot(event.target.value)} /></label>
-              <button className="button button-dark submit-button" type="submit" disabled={rsvpState === "sending"}>
-                {rsvpState === "sending" ? "Đang gửi…" : "Gửi xác nhận"}
-              </button>
-              {rsvpMessage && <Notice state={rsvpState}>{rsvpMessage}</Notice>}
-            </form>
+            <iframe
+              className="rsvp-form-embed"
+              title="Biểu mẫu xác nhận tham dự tiệc cưới"
+              src={wedding.rsvpFormUrl}
+              loading="lazy"
+            />
+            <a className="rsvp-form-fallback" href={wedding.rsvpFormUrl} target="_blank" rel="noopener noreferrer">
+              Nếu biểu mẫu không hiển thị, mở trong tab mới
+            </a>
           </div>
         </div>
       )}
