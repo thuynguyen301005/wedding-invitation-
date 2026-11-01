@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/retry-email",
+      "path": "/api/cron/retry-sheet-sync",
       "schedule": "0 0 * * *"
     }
   ]

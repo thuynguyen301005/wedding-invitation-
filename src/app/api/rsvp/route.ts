@@ -1,7 +1,7 @@
 ﻿import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { databaseUnavailable, enforceRateLimit, isAllowedOrigin, jsonError, readJson } from "@/lib/api";
-import { sendRsvpNotification, type RsvpNotificationStatus } from "@/lib/email";
+import { syncRsvpToSheet, type RsvpSheetSyncStatus } from "@/lib/rsvp-sheet";
 import { getSupabase } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -70,13 +70,13 @@ export async function POST(request: NextRequest) {
     message: string | null;
     confirmed_at: string;
     revision: number;
-    notification_status: RsvpNotificationStatus | "not_required";
+    notification_status: RsvpSheetSyncStatus | "not_required";
     updated: boolean;
     idempotent: boolean;
   };
   let notificationStatus = saved.notification_status;
   if (saved.notification_status === "pending" && !saved.idempotent) {
-    notificationStatus = await sendRsvpNotification(saved);
+    notificationStatus = await syncRsvpToSheet(saved);
   }
 
   return NextResponse.json({

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { databaseUnavailable } from "@/lib/api";
-import { sendRsvpNotification, type RsvpForEmail } from "@/lib/email";
+import { syncRsvpToSheet, type RsvpForSheet } from "@/lib/rsvp-sheet";
 import { getSupabase } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -17,10 +17,13 @@ export async function GET(request: NextRequest) {
     p_limit: 20,
   });
   if (error) {
-    console.error("email_retry_claim_failed", error.code);
-    return NextResponse.json({ error: "Retry job unavailable" }, { status: 503 });
+    console.error("rsvp_sheet_retry_claim_failed", error.code);
+    return NextResponse.json({ error: "Sheet sync retry job unavailable" }, { status: 503 });
   }
-  const notifications = (data || []) as RsvpForEmail[];
-  await Promise.all(notifications.map((rsvp) => sendRsvpNotification(rsvp)));
-  return NextResponse.json({ processed: notifications.length });
+  const notifications = (data || []) as RsvpForSheet[];
+  const results = await Promise.all(notifications.map((rsvp) => syncRsvpToSheet(rsvp)));
+  return NextResponse.json({
+    processed: notifications.length,
+    synced: results.filter((status) => status === "sent").length,
+  });
 }

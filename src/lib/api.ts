@@ -90,16 +90,19 @@ export function getClientKey(request: NextRequest): string {
 
 export async function enforceRateLimit(
   request: NextRequest,
-  bucket: "rsvp" | "wish",
+  bucket: "rsvp" | "wish" | "admin",
   guestToken?: string,
 ): Promise<NextResponse | null> {
   if (!process.env.RATE_LIMIT_SALT) {
     return jsonError("Dịch vụ chưa được cấu hình. Vui lòng thử lại sau.", 503);
   }
   const ipHash = getClientKey(request);
-  const limit = Number(
-    process.env[bucket === "rsvp" ? "RATE_LIMIT_RSVP_PER_HOUR" : "RATE_LIMIT_WISH_PER_HOUR"] || 10,
-  );
+  const rateLimitVariable = {
+    rsvp: "RATE_LIMIT_RSVP_PER_HOUR",
+    wish: "RATE_LIMIT_WISH_PER_HOUR",
+    admin: "RATE_LIMIT_ADMIN_PER_HOUR",
+  }[bucket];
+  const limit = Number(process.env[rateLimitVariable] || 10);
   const supabase = getSupabase();
   const { data, error } = await supabase.rpc("consume_rate_limit", {
     p_ip_hash: ipHash,

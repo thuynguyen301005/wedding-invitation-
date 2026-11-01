@@ -304,15 +304,15 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
       setRsvpState("success");
       const notificationMessage =
         payload.notificationStatus === "sent"
-          ? "Đã ghi nhận xác nhận và gửi thông báo đến cô dâu."
+          ? "Đã lưu xác nhận vào danh sách của cô dâu chú rể."
           : payload.notificationStatus === "pending"
-            ? "Đã ghi nhận xác nhận. Email thông báo sẽ được tự động gửi lại."
+            ? "Đã lưu xác nhận. Danh sách đang được cập nhật, hệ thống sẽ tự thử lại."
             : payload.notificationStatus === "failed"
-              ? "Đã lưu xác nhận, nhưng chưa gửi được email thông báo đến cô dâu."
+              ? "Đã lưu xác nhận, nhưng chưa cập nhật được danh sách. Vui lòng báo cô dâu chú rể."
               : "Đã ghi nhận xác nhận của bạn.";
       setToast(
         payload.notificationStatus === "failed"
-          ? "Đã lưu xác nhận, nhưng email thông báo chưa gửi được."
+          ? "Đã lưu xác nhận, nhưng danh sách chưa cập nhật được."
           : "Cảm ơn bạn đã xác nhận tham gia!",
       );
       setRsvpOpen(false);
