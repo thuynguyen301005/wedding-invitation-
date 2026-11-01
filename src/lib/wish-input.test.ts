@@ -1,7 +1,32 @@
 // Runtime validation coverage for RSVP email routing and guestbook submissions.
 import { describe, expect, it } from "vitest";
 import { rsvpNotificationRecipient } from "./email-recipient";
+import { isRequestOriginAllowed } from "./origin";
 import { parseWishSubmission } from "./wish-input";
+
+describe("same-origin API protection", () => {
+  it("accepts the active Netlify host when the configured URL is stale localhost", () => {
+    expect(
+      isRequestOriginAllowed(
+        "https://wedding-example.netlify.app",
+        ["http://localhost:3000"],
+        ["wedding-example.netlify.app", "localhost:8888"],
+        "https:",
+      ),
+    ).toBe(true);
+  });
+
+  it("rejects a different site origin", () => {
+    expect(
+      isRequestOriginAllowed(
+        "https://attacker.example",
+        ["http://localhost:3000"],
+        ["wedding-example.netlify.app"],
+        "https:",
+      ),
+    ).toBe(false);
+  });
+});
 
 describe("guestbook submissions", () => {
   it("accepts the content and guest token sent by the invitation form", () => {

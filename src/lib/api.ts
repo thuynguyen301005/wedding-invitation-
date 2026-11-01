@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { siteUrl } from "@/config/wedding";
 import { getSupabase } from "@/lib/supabase";
+import { isRequestOriginAllowed } from "@/lib/origin";
 
 export const MAX_BODY_BYTES = 10 * 1024;
 
@@ -28,16 +29,24 @@ export async function readJson(request: NextRequest): Promise<Record<string, unk
 export function isAllowedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get("origin");
   if (!origin) return process.env.NODE_ENV !== "production";
+  const forwardedHost = request.headers.get("x-forwarded-host")?.split(",")[0]?.trim();
+  const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",")[0]?.trim();
   const allowedOrigins = [
     process.env.ALLOWED_ORIGIN,
     process.env.URL,
     process.env.DEPLOY_PRIME_URL,
     siteUrl,
     request.nextUrl.origin,
-  ]
-    .filter((value): value is string => Boolean(value))
-    .map((value) => value.replace(/\/$/, ""));
-  if (allowedOrigins.includes(origin.replace(/\/$/, ""))) return true;
+  ].filter((value): value is string => Boolean(value));
+  const requestHosts = [
+    forwardedHost,
+    request.headers.get("host"),
+    request.nextUrl.host,
+  ].filter((value): value is string => Boolean(value));
+  const requestProtocol = forwardedProtocol
+    ? `${forwardedProtocol.replace(/:$/, "")}:`
+    : request.nextUrl.protocol;
+  if (isRequestOriginAllowed(origin, allowedOrigins, requestHosts, requestProtocol)) return true;
   // Cho phép truy cập local trong quá trình phát triển (localhost / IP mạng nội bộ)
   if (process.env.NODE_ENV !== "production") {
     try {
