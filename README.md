@@ -34,6 +34,8 @@ Tệp cấu hình có thể đặt `showRsvpCount: true` để mở API tổng s
 
 ## Triển khai và email
 
+Với Vercel Hobby, lịch trong `vercel.json` chạy một lần mỗi ngày để tương thích giới hạn gói; email RSVP vẫn được gửi ngay khi khách xác nhận. Mô tả lịch mỗi phút ở đoạn kế tiếp chỉ áp dụng cho gói hỗ trợ tần suất đó.
+
 Triển khai trên nền tảng hỗ trợ Next.js và cron mỗi phút (ví dụ Vercel), sau đó cấu hình tất cả biến môi trường và domain Resend. `vercel.json` gọi `/api/cron/retry-email` mỗi phút; Vercel tự gửi `Authorization: Bearer <CRON_SECRET>` khi đã cấu hình cron secret. Email lần đầu được thử tối đa 5 giây sau khi lưu RSVP; các lỗi tạm thời được thử lại sau 1, 5 và 15 phút. Các lần gửi dùng idempotency key cố định theo RSVP/revision.
 
 Nếu deploy trên Netlify, scheduled function `netlify/functions/retry-email.mjs` thay cho Vercel Cron; Netlify cung cấp URL site và cần `CRON_SECRET` để xác thực. Cấu hình `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `FROM_EMAIL`, `RATE_LIMIT_SALT` và `CRON_SECRET` trong Site configuration → Environment variables. API lời chúc hỗ trợ cả schema cũ (`name`, `message`) và schema trong migration (`sender_name`, `content`). Nếu đã có RSVP đang chờ gửi email từ trước, chạy migration `002_retry_initial_rsvp_notifications.sql`.
