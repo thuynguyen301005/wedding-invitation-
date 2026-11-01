@@ -1,6 +1,7 @@
 ﻿import { NextRequest, NextResponse } from "next/server";
 import { databaseUnavailable, enforceRateLimit, isAllowedOrigin, jsonError, readJson } from "@/lib/api";
 import { getSupabase } from "@/lib/supabase";
+import { containsProfanity } from "@/utils/checkProfanity";
 
 export const runtime = "nodejs";
 
@@ -42,6 +43,10 @@ export async function POST(request: NextRequest) {
   if (!name || name.length > 100) fields.name = "Vui long nhap ten (toi da 100 ky tu).";
   if (!message || message.length > 500) fields.message = "Loi chuc can co noi dung (toi da 500 ky tu).";
   if (Object.keys(fields).length) return jsonError("Vui long kiem tra lai thong tin.", 400, fields);
+
+  if (containsProfanity(name) || containsProfanity(message)) {
+    return jsonError("Nội dung không hợp lệ", 400);
+  }
 
   const rateLimit = await enforceRateLimit(request, "wish");
   if (rateLimit) return rateLimit;

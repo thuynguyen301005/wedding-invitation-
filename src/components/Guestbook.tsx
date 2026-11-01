@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { containsProfanity } from "@/utils/checkProfanity";
 
 type Wish = { id: string; name: string; message: string; createdAt: string };
 
@@ -32,6 +33,10 @@ export default function Guestbook() {
     setError("");
     if (!name.trim() || !message.trim()) {
       setError("Vui lòng nhập tên và lời chúc.");
+      return;
+    }
+    if (containsProfanity(name) || containsProfanity(message)) {
+      setError("Lời chúc chứa từ ngữ không phù hợp, vui lòng sửa lại!");
       return;
     }
     setSending(true);

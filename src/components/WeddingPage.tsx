@@ -205,9 +205,6 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
     return () => window.clearTimeout(timer);
   }, [setRsvpDraft, setWishDraft]);
 
-  useEffect(() => {
-    void loadWishes();
-  }, []);
 
   useEffect(() => {
     if (!scrollToLatestWish.current) return;
@@ -238,6 +235,11 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
       setLoadingWishes(false);
     }
   }
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    void loadWishes();
+  }, []);
 
   async function submitRsvp(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
