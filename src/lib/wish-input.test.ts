@@ -1,5 +1,6 @@
 // Runtime validation coverage for RSVP email routing and guestbook submissions.
 import { describe, expect, it } from "vitest";
+import { rsvpNotificationMessage } from "./email-content";
 import { rsvpNotificationRecipient } from "./email-recipient";
 import { isRequestOriginAllowed } from "./origin";
 import { parseWishSubmission } from "./wish-input";
@@ -62,4 +63,8 @@ describe("guestbook submissions", () => {
 
 it("routes RSVP notifications to the requested email address", () => {
   expect(rsvpNotificationRecipient).toBe("minhanh01205@gmail.com");
+});
+
+it("uses the requested confirmation message in the RSVP email", () => {
+  expect(rsvpNotificationMessage).toBe("Đã xác nhận thành công.");
 });

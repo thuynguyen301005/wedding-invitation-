@@ -21,7 +21,7 @@ Tệp cấu hình có thể đặt `showRsvpCount: true` để mở API tổng s
 ## Biến môi trường
 
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: chỉ phía máy chủ; không đặt tiền tố `NEXT_PUBLIC_` cho khóa bí mật.
-- `RESEND_API_KEY`, `FROM_EMAIL`: cấu hình gửi email; thông báo RSVP được gửi đến `minhanh01205@gmail.com`. `FROM_EMAIL` phải thuộc domain đã xác minh trên Resend.
+- `RESEND_API_KEY`, `FROM_EMAIL`: cấu hình gửi email; thông báo RSVP với nội dung “Đã xác nhận thành công.” được gửi đến `minhanh01205@gmail.com`. `FROM_EMAIL` phải thuộc domain đã xác minh trên Resend.
 - `REPLY_TO_EMAIL`: tùy chọn.
 - `ALLOWED_ORIGIN`: origin chính thức của website; nếu bỏ trống, API chấp nhận cùng origin với request.
 - `TRUST_PROXY_HEADER`: header địa chỉ do proxy tin cậy đặt; tự chọn `x-nf-client-connection-ip` trên Netlify và `x-vercel-forwarded-for` trên Vercel. Không dùng `x-forwarded-for` từ người dùng tùy ý.
