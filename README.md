@@ -1,12 +1,12 @@
 # Thiệp cưới
 
-Ứng dụng Next.js tiếng Việt cho thiệp cưới gồm hai trang: trang bìa tại `/` có lá rơi và nút mở thiệp, cùng trang nội dung tại `/invitation`. Thiệp hỗ trợ RSVP, lời chúc công khai và thông báo email qua Resend. Dữ liệu khách không được truy cập trực tiếp từ trình duyệt: API chạy phía máy chủ, lưu vào Supabase Postgres rồi mới gửi email.
+Ứng dụng Next.js tiếng Việt cho thiệp cưới gồm hai trang: trang bìa tại `/` có lá rơi và nút mở thiệp, cùng trang nội dung tại `/invitation`. Thiệp hỗ trợ RSVP, lời chúc công khai và thông báo email qua Google Apps Script. Dữ liệu khách không được truy cập trực tiếp từ trình duyệt: API chạy phía máy chủ, lưu vào Supabase Postgres rồi mới gửi email.
 
 ## Chạy tại máy
 
 1. Cài Node.js 20 trở lên.
 2. Chạy `npm install`.
-3. Sao chép `.env.example` thành `.env.local`, điền cấu hình Supabase/Resend.
+3. Sao chép `.env.example` thành `.env.local`, điền cấu hình Supabase và Google Apps Script.
 4. Chạy nội dung `supabase/migrations/001_initial_schema.sql` trong SQL Editor của Supabase.
 5. Chạy `npm run dev`, sau đó mở `http://localhost:3000`.
 
@@ -21,8 +21,7 @@ Tệp cấu hình có thể đặt `showRsvpCount: true` để mở API tổng s
 ## Biến môi trường
 
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: chỉ phía máy chủ; không đặt tiền tố `NEXT_PUBLIC_` cho khóa bí mật.
-- `RESEND_API_KEY`, `FROM_EMAIL`: cấu hình gửi email; thông báo RSVP với nội dung “Đã xác nhận thành công.” được gửi đến `minhanh01205@gmail.com`. `FROM_EMAIL` phải thuộc domain đã xác minh trên Resend.
-- `REPLY_TO_EMAIL`: tùy chọn.
+- `GMAIL_SCRIPT_URL`, `GMAIL_SCRIPT_SECRET`: URL Web App và khóa dùng chung với Google Apps Script để gửi email RSVP tới `minhanh01205@gmail.com`.
 - `ALLOWED_ORIGIN`: origin chính thức của website; nếu bỏ trống, API chấp nhận cùng origin với request.
 - `TRUST_PROXY_HEADER`: header địa chỉ do proxy tin cậy đặt; tự chọn `x-nf-client-connection-ip` trên Netlify và `x-vercel-forwarded-for` trên Vercel. Không dùng `x-forwarded-for` từ người dùng tùy ý.
 - `RATE_LIMIT_SALT`: chuỗi bí mật dài để băm IP; IP gốc không được lưu.
@@ -32,15 +31,18 @@ Tệp cấu hình có thể đặt `showRsvpCount: true` để mở API tổng s
 - `BLOCKED_KEYWORDS`: từ khóa cấm phân tách bằng dấu phẩy.
 - `CRON_SECRET`: bí mật bảo vệ endpoint thử gửi lại email.
 
-## Triển khai và email
+## Cấu hình gửi email bằng Google Apps Script
 
-Với Vercel Hobby, lịch trong `vercel.json` chạy một lần mỗi ngày để tương thích giới hạn gói; email RSVP vẫn được gửi ngay khi khách xác nhận. Mô tả lịch mỗi phút ở đoạn kế tiếp chỉ áp dụng cho gói hỗ trợ tần suất đó.
+RSVP sẽ gửi email sau khi lưu xác nhận. Không cần domain gửi riêng:
 
-Triển khai trên nền tảng hỗ trợ Next.js và cron mỗi phút (ví dụ Vercel), sau đó cấu hình tất cả biến môi trường và domain Resend. `vercel.json` gọi `/api/cron/retry-email` mỗi phút; Vercel tự gửi `Authorization: Bearer <CRON_SECRET>` khi đã cấu hình cron secret. Email lần đầu được thử tối đa 5 giây sau khi lưu RSVP; các lỗi tạm thời được thử lại sau 1, 5 và 15 phút. Các lần gửi dùng idempotency key cố định theo RSVP/revision.
+1. Mở `script.google.com` bằng tài khoản Gmail muốn dùng để gửi email, tạo project và dán mã trong `google-apps-script/Code.gs`.
+2. Trong **Project Settings > Script Properties**, thêm `GMAIL_SCRIPT_SECRET` với một chuỗi ngẫu nhiên dài. Dùng cùng giá trị này trên Vercel và giữ bí mật.
+3. Chọn **Deploy > New deployment > Web app**, đặt **Execute as: Me** và **Who has access: Anyone**. Cấp quyền gửi email, sau đó sao chép URL Web App kết thúc bằng `/exec`.
+4. Trong Vercel > **Settings > Environment Variables**, thêm `GMAIL_SCRIPT_URL` là URL `/exec` và `GMAIL_SCRIPT_SECRET` là cùng secret ở bước 2. Cũng cần `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` (hoặc `SUPABASE_SECRET_KEY`) và `RATE_LIMIT_SALT`, sau đó deploy lại.
 
-Nếu deploy trên Netlify, scheduled function `netlify/functions/retry-email.mjs` thay cho Vercel Cron; Netlify cung cấp URL site và cần `CRON_SECRET` để xác thực. Cấu hình `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `FROM_EMAIL`, `RATE_LIMIT_SALT` và `CRON_SECRET` trong Site configuration → Environment variables. API lời chúc hỗ trợ cả schema cũ (`name`, `message`) và schema trong migration (`sender_name`, `content`). Nếu đã có RSVP đang chờ gửi email từ trước, chạy migration `002_retry_initial_rsvp_notifications.sql`.
+Script chỉ gửi thông báo cố định “Đã xác nhận thành công.” tới `minhanh01205@gmail.com`, từ tài khoản Gmail đã cấp quyền. Lỗi gửi tạm thời sẽ được thử lại; cron trên Vercel Hobby chạy mỗi ngày một lần. Trên Netlify, thêm các biến tương tự trong Site configuration > Environment variables.
 
-Trước ngày ra mắt: xác minh domain gửi, cấu hình SPF/DKIM/DMARC, gửi thử tới Gmail/Outlook, bật sao lưu database, kiểm tra khôi phục, HTTPS và giám sát uptime. Không thể xác minh các bước này chỉ bằng mã nguồn.
+API sổ lời chúc hỗ trợ schema cũ (`name`, `message`) và schema migration (`sender_name`, `content`). Sau khi deploy, gửi RSVP thử và kiểm tra log Vercel/Netlify cũng như Apps Script.
 
 ## Xuất dữ liệu và vận hành
 

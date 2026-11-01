@@ -1,6 +1,5 @@
 import { getSupabase } from "@/lib/supabase";
 import { rsvpNotificationMessage } from "@/lib/email-content";
-import { rsvpNotificationRecipient } from "@/lib/email-recipient";
 
 export type RsvpForEmail = {
   id: string;
@@ -14,52 +13,49 @@ export type RsvpForEmail = {
 
 export type RsvpNotificationStatus = "sent" | "pending" | "failed";
 
+type GoogleAppsScriptResponse = {
+  ok?: boolean;
+  code?: string;
+  permanent?: boolean;
+};
+
 export async function sendRsvpNotification(rsvp: RsvpForEmail): Promise<RsvpNotificationStatus> {
-  const apiKey = process.env.RESEND_API_KEY;
-  const fromEmail = process.env.FROM_EMAIL;
-  if (!apiKey || !fromEmail) {
+  const scriptUrl = process.env.GMAIL_SCRIPT_URL;
+  const secret = process.env.GMAIL_SCRIPT_SECRET;
+  if (!scriptUrl || !secret) {
     console.error("rsvp_email_not_configured", {
       missing: [
-        ...(!apiKey ? ["RESEND_API_KEY"] : []),
-        ...(!fromEmail ? ["FROM_EMAIL"] : []),
+        ...(!scriptUrl ? ["GMAIL_SCRIPT_URL"] : []),
+        ...(!secret ? ["GMAIL_SCRIPT_SECRET"] : []),
       ],
     });
     await updateDelivery(rsvp.id, rsvp.revision, false, true, "EMAIL_CONFIG");
     return "failed";
   }
 
-  const subject = rsvpNotificationMessage;
-  const text = rsvpNotificationMessage;
-  const html = `<p>${rsvpNotificationMessage}</p>`;
-
   let permanentFailure = false;
   let errorCode = "EMAIL_TEMPORARY";
   try {
-    const response = await fetch("https://api.resend.com/emails", {
+    const response = await fetch(scriptUrl, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-        "Idempotency-Key": `rsvp-${rsvp.id}-revision-${rsvp.revision}`,
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        from: fromEmail,
-        to: [rsvpNotificationRecipient],
-        ...(process.env.REPLY_TO_EMAIL ? { reply_to: process.env.REPLY_TO_EMAIL } : {}),
-        subject,
-        text,
-        html,
+        secret,
+        message: rsvpNotificationMessage,
       }),
-      signal: AbortSignal.timeout(5000),
+      redirect: "follow",
+      signal: AbortSignal.timeout(20000),
     });
-    if (response.ok) {
+    const result = (await response.json().catch(() => ({}))) as GoogleAppsScriptResponse;
+    if (response.ok && result.ok === true) {
       await updateDelivery(rsvp.id, rsvp.revision, true, false, null);
       return "sent";
     }
-    const body = (await response.json().catch(() => ({}))) as { name?: string; statusCode?: number };
-    errorCode = body.name || `RESEND_${response.status}`;
+
+    errorCode = result.code || `GMAIL_SCRIPT_${response.status}`;
     permanentFailure =
-      response.status !== 408 && response.status !== 429 && response.status < 500;
+      result.permanent === true ||
+      (response.status >= 400 && response.status < 500 && response.status !== 429);
     console.error("rsvp_email_provider_rejected", {
       status: response.status,
       code: errorCode,
