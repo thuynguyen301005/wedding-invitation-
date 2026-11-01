@@ -2,7 +2,6 @@
 
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState, useImperativeHandle } from "react";
 import Image from "next/image";
-import { sendRsvpEmail } from "@/app/actions/sendRsvpEmail";
 import Guestbook from "@/components/Guestbook";
 import type { wedding as WeddingConfig } from "@/config/wedding";
 
@@ -303,18 +302,21 @@ const WeddingPage = forwardRef<WeddingPageHandle, { wedding: Wedding; invitee?: 
         throw new Error(payload.error || "Chưa thể gửi xác nhận. Vui lòng thử lại.");
       }
       setRsvpState("success");
-      const formData = new FormData();
-      formData.append("name", rsvpDraft.name);
-      formData.append("message", rsvpDraft.message);
-      const emailResult = await sendRsvpEmail(formData);
-      if (emailResult.success) {
-        setToast("C\u00e1m \u01a1n b\u00e1n \u0111\u00e3 x\u00e1c nh\u1eadn tham gia!");
-        setRsvpOpen(false);
-        setRsvpMessage("\u0110\u00e3 ghi nh\u1eadn x\u00e1c nh\u1eadn v\u00e0 g\u1eedi th\u00f4ng b\u00e1o \u0111\u1ebfn c\u00f4 d\u00e2u.");
-      } else {
-        setRsvpState("error");
-        setRsvpMessage(emailResult.error || "\u0110\u00e3 l\u01b0u x\u00e1c nh\u1eadn nh\u01b0ng g\u1eedi email th\u1ea5t b\u1ea1i. Vui l\u00f2ng th\u1eed l\u1ea1i.");
-      }
+      const notificationMessage =
+        payload.notificationStatus === "sent"
+          ? "Đã ghi nhận xác nhận và gửi thông báo đến cô dâu."
+          : payload.notificationStatus === "pending"
+            ? "Đã ghi nhận xác nhận. Email thông báo sẽ được tự động gửi lại."
+            : payload.notificationStatus === "failed"
+              ? "Đã lưu xác nhận, nhưng chưa gửi được email thông báo đến cô dâu."
+              : "Đã ghi nhận xác nhận của bạn.";
+      setToast(
+        payload.notificationStatus === "failed"
+          ? "Đã lưu xác nhận, nhưng email thông báo chưa gửi được."
+          : "Cảm ơn bạn đã xác nhận tham gia!",
+      );
+      setRsvpOpen(false);
+      setRsvpMessage(notificationMessage);
       setHasPreviousRsvp(true);
       try {
         localStorage.setItem("wedding-rsvp-saved", "true");

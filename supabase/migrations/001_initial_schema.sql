@@ -226,7 +226,7 @@ begin
   with due as (
     select id from rsvps
     where notification_status = 'pending'
-      and next_attempt_at <= now()
+      and (next_attempt_at is null or next_attempt_at <= now())
       and (notification_claimed_at is null or notification_claimed_at < now() - interval '2 minutes')
     order by next_attempt_at
     for update skip locked

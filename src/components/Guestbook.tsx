@@ -3,7 +3,21 @@
 import { useEffect, useState } from "react";
 import { containsProfanity } from "@/utils/checkProfanity";
 
-type Wish = { id: string; name: string; message: string; createdAt: string };
+type Wish = { id: string; senderName: string; content: string; createdAt: string };
+
+function getGuestToken(): string {
+  try {
+    const stored = localStorage.getItem("wedding-guest-token");
+    if (stored && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(stored)) {
+      return stored;
+    }
+    const token = crypto.randomUUID();
+    localStorage.setItem("wedding-guest-token", token);
+    return token;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
 
 export default function Guestbook() {
   const [wishes, setWishes] = useState<Wish[]>([]);
@@ -44,7 +58,12 @@ export default function Guestbook() {
       const res = await fetch("/api/wishes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name.trim(), message: message.trim(), website: "" }),
+        body: JSON.stringify({
+          name: name.trim(),
+          content: message.trim(),
+          guestToken: getGuestToken(),
+          website: "",
+        }),
       });
       const data = await res.json();
       if (!res.ok || !data.wish) {
@@ -101,12 +120,12 @@ export default function Guestbook() {
           {wishes.map((wish) => (
             <article className="guestbook-wish fade-in-up" key={wish.id}>
               <div className="guestbook-wish-heading">
-                <strong>{wish.name}</strong>
+                <strong>{wish.senderName}</strong>
                 <time dateTime={wish.createdAt}>
                   {new Date(wish.createdAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
                 </time>
               </div>
-              <p>{wish.message}</p>
+              <p>{wish.content}</p>
             </article>
           ))}
         </div>

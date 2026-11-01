@@ -21,10 +21,10 @@ Tệp cấu hình có thể đặt `showRsvpCount: true` để mở API tổng s
 ## Biến môi trường
 
 - `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`: chỉ phía máy chủ; không đặt tiền tố `NEXT_PUBLIC_` cho khóa bí mật.
-- `RESEND_API_KEY`, `COUPLE_EMAIL`, `FROM_EMAIL`: cấu hình gửi email; `COUPLE_EMAIL` hiện được đặt là `minhanh01205@gmail.com`, còn `FROM_EMAIL` phải thuộc domain đã xác minh trên Resend.
+- `RESEND_API_KEY`, `FROM_EMAIL`: cấu hình gửi email; thông báo RSVP được gửi đến `minhanh01205@gmail.com`. `FROM_EMAIL` phải thuộc domain đã xác minh trên Resend.
 - `REPLY_TO_EMAIL`: tùy chọn.
-- `ALLOWED_ORIGIN`: origin chính thức của website.
-- `TRUST_PROXY_HEADER`: header địa chỉ do proxy tin cậy đặt; mặc định dành cho Vercel là `x-vercel-forwarded-for`. Không dùng `x-forwarded-for` từ người dùng tùy ý.
+- `ALLOWED_ORIGIN`: origin chính thức của website; nếu bỏ trống, API chấp nhận cùng origin với request.
+- `TRUST_PROXY_HEADER`: header địa chỉ do proxy tin cậy đặt; tự chọn `x-nf-client-connection-ip` trên Netlify và `x-vercel-forwarded-for` trên Vercel. Không dùng `x-forwarded-for` từ người dùng tùy ý.
 - `RATE_LIMIT_SALT`: chuỗi bí mật dài để băm IP; IP gốc không được lưu.
 - `RATE_LIMIT_RSVP_PER_HOUR`, `RATE_LIMIT_WISH_PER_HOUR`: mặc định 10 yêu cầu/IP/giờ; guest token bị giới hạn 5 lần/giờ.
 - `NOTIFY_ON_DECLINE`: mặc định `true` để cô dâu nhận email với mọi phản hồi RSVP; `SHOW_RSVP_COUNT` mặc định `false`.
@@ -35,6 +35,8 @@ Tệp cấu hình có thể đặt `showRsvpCount: true` để mở API tổng s
 ## Triển khai và email
 
 Triển khai trên nền tảng hỗ trợ Next.js và cron mỗi phút (ví dụ Vercel), sau đó cấu hình tất cả biến môi trường và domain Resend. `vercel.json` gọi `/api/cron/retry-email` mỗi phút; Vercel tự gửi `Authorization: Bearer <CRON_SECRET>` khi đã cấu hình cron secret. Email lần đầu được thử tối đa 5 giây sau khi lưu RSVP; các lỗi tạm thời được thử lại sau 1, 5 và 15 phút. Các lần gửi dùng idempotency key cố định theo RSVP/revision.
+
+Nếu deploy trên Netlify, scheduled function `netlify/functions/retry-email.mjs` thay cho Vercel Cron; Netlify cung cấp URL site và cần `CRON_SECRET` để xác thực. Cấu hình `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `RESEND_API_KEY`, `FROM_EMAIL`, `RATE_LIMIT_SALT` và `CRON_SECRET` trong Site configuration → Environment variables. API lời chúc hỗ trợ cả schema cũ (`name`, `message`) và schema trong migration (`sender_name`, `content`). Nếu đã có RSVP đang chờ gửi email từ trước, chạy migration `002_retry_initial_rsvp_notifications.sql`.
 
 Trước ngày ra mắt: xác minh domain gửi, cấu hình SPF/DKIM/DMARC, gửi thử tới Gmail/Outlook, bật sao lưu database, kiểm tra khôi phục, HTTPS và giám sát uptime. Không thể xác minh các bước này chỉ bằng mã nguồn.
 

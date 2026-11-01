@@ -1,6 +1,7 @@
 ﻿import { randomUUID } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { databaseUnavailable, enforceRateLimit, isAllowedOrigin, jsonError, readJson } from "@/lib/api";
+import { sendRsvpNotification, type RsvpNotificationStatus } from "@/lib/email";
 import { getSupabase } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -54,7 +55,7 @@ export async function POST(request: NextRequest) {
     p_message: message || null,
     p_guest_token: guestToken,
     p_idempotency_key: idempotencyKey,
-    p_notify_on_decline: process.env.NOTIFY_ON_DECLINE === "true",
+    p_notify_on_decline: process.env.NOTIFY_ON_DECLINE !== "false",
   });
   if (error) {
     console.error("rsvp_save_failed", error.code, error.message, error.details, error.hint);
@@ -69,13 +70,19 @@ export async function POST(request: NextRequest) {
     message: string | null;
     confirmed_at: string;
     revision: number;
+    notification_status: RsvpNotificationStatus | "not_required";
     updated: boolean;
     idempotent: boolean;
   };
+  let notificationStatus = saved.notification_status;
+  if (saved.notification_status === "pending" && !saved.idempotent) {
+    notificationStatus = await sendRsvpNotification(saved);
+  }
 
   return NextResponse.json({
     saved: true,
     updated: saved.updated,
+    notificationStatus,
     message:
       saved.attendance_status === "no"
         ? "ÄÃ£ ghi nháº­n. Cáº£m Æ¡n báº¡n Ä‘Ã£ bÃ¡o; ráº¥t tiáº¿c báº¡n khÃ´ng thá»ƒ Ä‘áº¿n."

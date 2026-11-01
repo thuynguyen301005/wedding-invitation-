@@ -1,7 +1,8 @@
 import { getSupabase } from "@/lib/supabase";
 import { wedding } from "@/config/wedding";
+import { rsvpNotificationRecipient } from "@/lib/email-recipient";
 
-type RsvpForEmail = {
+export type RsvpForEmail = {
   id: string;
   name: string;
   attendance_status: "yes" | "no";
@@ -10,6 +11,8 @@ type RsvpForEmail = {
   confirmed_at: string;
   revision: number;
 };
+
+export type RsvpNotificationStatus = "sent" | "pending" | "failed";
 
 function escapeHtml(value: string): string {
   return value.replace(/[&<>"']/g, (character) => {
@@ -36,13 +39,12 @@ function formatVietnamTime(value: string): string {
   }).format(new Date(value));
 }
 
-export async function sendRsvpNotification(rsvp: RsvpForEmail): Promise<void> {
+export async function sendRsvpNotification(rsvp: RsvpForEmail): Promise<RsvpNotificationStatus> {
   const apiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.FROM_EMAIL;
-  const recipients = process.env.COUPLE_EMAIL?.split(",").map((email) => email.trim()).filter(Boolean);
-  if (!apiKey || !fromEmail || !recipients?.length) {
+  if (!apiKey || !fromEmail) {
     await updateDelivery(rsvp.id, rsvp.revision, false, true, "EMAIL_CONFIG");
-    return;
+    return "failed";
   }
 
   const bride = safeHeader(wedding.bride);
@@ -75,7 +77,7 @@ export async function sendRsvpNotification(rsvp: RsvpForEmail): Promise<void> {
       },
       body: JSON.stringify({
         from: `${bride} & ${groom} <${fromEmail}>`,
-        to: recipients,
+        to: [rsvpNotificationRecipient],
         ...(process.env.REPLY_TO_EMAIL ? { reply_to: process.env.REPLY_TO_EMAIL } : {}),
         subject,
         text,
@@ -85,7 +87,7 @@ export async function sendRsvpNotification(rsvp: RsvpForEmail): Promise<void> {
     });
     if (response.ok) {
       await updateDelivery(rsvp.id, rsvp.revision, true, false, null);
-      return;
+      return "sent";
     }
     const body = (await response.json().catch(() => ({}))) as { name?: string; statusCode?: number };
     errorCode = body.name || `RESEND_${response.status}`;
@@ -95,6 +97,7 @@ export async function sendRsvpNotification(rsvp: RsvpForEmail): Promise<void> {
     errorCode = error instanceof Error && error.name === "TimeoutError" ? "EMAIL_TIMEOUT" : "EMAIL_NETWORK";
   }
   await updateDelivery(rsvp.id, rsvp.revision, false, permanentFailure, errorCode);
+  return permanentFailure ? "failed" : "pending";
 }
 
 async function updateDelivery(

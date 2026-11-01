@@ -1,9 +1,40 @@
-﻿import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { databaseUnavailable, enforceRateLimit, isAllowedOrigin, jsonError, readJson } from "@/lib/api";
 import { getSupabase } from "@/lib/supabase";
+import { parseWishSubmission } from "@/lib/wish-input";
 import { containsProfanity } from "@/utils/checkProfanity";
 
 export const runtime = "nodejs";
+
+type WishRow = {
+  id: string;
+  sender_name: string;
+  content: string;
+  created_at: string;
+};
+
+type LegacyWishRow = {
+  id: string;
+  name: string;
+  message: string;
+  created_at: string;
+};
+
+function toPublicWish(wish: WishRow | LegacyWishRow) {
+  return "sender_name" in wish
+    ? {
+        id: wish.id,
+        senderName: wish.sender_name,
+        content: wish.content,
+        createdAt: wish.created_at,
+      }
+    : {
+        id: wish.id,
+        senderName: wish.name,
+        content: wish.message,
+        createdAt: wish.created_at,
+      };
+}
 
 export async function GET() {
   const unavailable = databaseUnavailable();
@@ -11,65 +42,80 @@ export async function GET() {
   const supabase = getSupabase();
   const { data, error } = await supabase
     .from("wishes")
-    .select("id,name,message,created_at")
+    .select("id,sender_name,content,created_at")
+    .eq("display_status", "visible")
     .order("created_at", { ascending: false })
     .limit(50);
+  if (error?.code === "42703") {
+    const legacy = await supabase
+      .from("wishes")
+      .select("id,name,message,created_at")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (legacy.error) {
+      console.error("wishes_fetch_failed", legacy.error.code, legacy.error.message);
+      return jsonError("Chưa thể tải lời chúc. Vui lòng thử lại sau.", 503);
+    }
+    return NextResponse.json({
+      wishes: ((legacy.data as LegacyWishRow[] | null) || []).map(toPublicWish),
+    });
+  }
   if (error) {
     console.error("wishes_fetch_failed", error.code, error.message, error.details, error.hint);
-    return jsonError("Chua the tai loi chuc. Vui long thu lai sau.", 503);
+    return jsonError("Chưa thể tải lời chúc. Vui lòng thử lại sau.", 503);
   }
   return NextResponse.json({
-    wishes: (data || []).map((wish: any) => ({
-      id: wish.id,
-      name: wish.name,
-      message: wish.message,
-      createdAt: wish.created_at,
-    })),
+    wishes: ((data as WishRow[] | null) || []).map(toPublicWish),
   });
 }
 
 export async function POST(request: NextRequest) {
-  if (!isAllowedOrigin(request)) return jsonError("Yeu cau khong hop le.", 403);
+  if (!isAllowedOrigin(request)) return jsonError("Yêu cầu không hợp lệ.", 403);
   const unavailable = databaseUnavailable();
   if (unavailable) return unavailable;
   const body = await readJson(request);
-  if (!body) return jsonError("Du lieu gui len khong hop le.", 400);
+  if (!body) return jsonError("Dữ liệu gửi lên không hợp lệ.", 400);
   if (body.website) return NextResponse.json({ ok: true });
 
-  const name = typeof body.name === "string" ? body.name.trim() : "";
-  const message = typeof body.message === "string" ? body.message.trim() : "";
+  const parsed = parseWishSubmission(body);
+  if ("fields" in parsed) return jsonError("Vui lòng kiểm tra lại thông tin.", 400, parsed.fields);
+  const { name, content, guestToken } = parsed.value;
 
-  const fields: Record<string, string> = {};
-  if (!name || name.length > 100) fields.name = "Vui long nhap ten (toi da 100 ky tu).";
-  if (!message || message.length > 500) fields.message = "Loi chuc can co noi dung (toi da 500 ky tu).";
-  if (Object.keys(fields).length) return jsonError("Vui long kiem tra lai thong tin.", 400, fields);
-
-  if (containsProfanity(name) || containsProfanity(message)) {
-    return jsonError("Nội dung không hợp lệ", 400);
+  if (containsProfanity(name) || containsProfanity(content)) {
+    return jsonError("Nội dung không hợp lệ.", 400);
   }
 
-  const rateLimit = await enforceRateLimit(request, "wish");
+  const rateLimit = await enforceRateLimit(request, "wish", guestToken);
   if (rateLimit) return rateLimit;
 
   const supabase = getSupabase();
-  const { data, error } = await supabase
+  const schema = await supabase
     .from("wishes")
-    .insert({ name, message })
-    .select("id,name,message,created_at")
-    .single();
-  if (error) {
-    console.error("wish_save_failed", error.code, error.message, error.details, error.hint);
-    return jsonError("Chua the gui loi chuc. Vui long thu lai.", 503);
+    .select("sender_name,content,display_status,guest_token")
+    .limit(0);
+  if (schema.error && schema.error.code !== "42703") {
+    console.error("wish_schema_check_failed", schema.error.code, schema.error.message);
+    return jsonError("Chưa thể gửi lời chúc. Vui lòng thử lại.", 503);
   }
+
+  const saved = schema.error
+    ? await supabase
+        .from("wishes")
+        .insert({ name, message: content })
+        .select("id,name,message,created_at")
+        .single()
+    : await supabase
+        .from("wishes")
+        .insert({ sender_name: name, content, guest_token: guestToken })
+        .select("id,sender_name,content,created_at")
+        .single();
+  if (saved.error) {
+    console.error("wish_save_failed", saved.error.code, saved.error.message, saved.error.details, saved.error.hint);
+    return jsonError("Chưa thể gửi lời chúc. Vui lòng thử lại.", 503);
+  }
+  const wish = saved.data as WishRow | LegacyWishRow;
   return NextResponse.json(
-    {
-      wish: {
-        id: data.id,
-        name: data.name,
-        message: data.message,
-        createdAt: data.created_at,
-      },
-    },
+    { wish: toPublicWish(wish) },
     { status: 201 },
   );
 }

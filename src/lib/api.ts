@@ -28,8 +28,16 @@ export async function readJson(request: NextRequest): Promise<Record<string, unk
 export function isAllowedOrigin(request: NextRequest): boolean {
   const origin = request.headers.get("origin");
   if (!origin) return process.env.NODE_ENV !== "production";
-  const allowed = process.env.ALLOWED_ORIGIN || siteUrl;
-  if (origin === allowed) return true;
+  const allowedOrigins = [
+    process.env.ALLOWED_ORIGIN,
+    process.env.URL,
+    process.env.DEPLOY_PRIME_URL,
+    siteUrl,
+    request.nextUrl.origin,
+  ]
+    .filter((value): value is string => Boolean(value))
+    .map((value) => value.replace(/\/$/, ""));
+  if (allowedOrigins.includes(origin.replace(/\/$/, ""))) return true;
   // Cho phép truy cập local trong quá trình phát triển (localhost / IP mạng nội bộ)
   if (process.env.NODE_ENV !== "production") {
     try {
@@ -57,7 +65,13 @@ export function databaseUnavailable(): NextResponse | null {
 }
 
 export function getClientKey(request: NextRequest): string {
-  const proxyHeader = process.env.TRUST_PROXY_HEADER || "x-vercel-forwarded-for";
+  const configuredHeader = process.env.TRUST_PROXY_HEADER;
+  const proxyHeader =
+    process.env.NETLIFY === "true"
+      ? configuredHeader && configuredHeader !== "x-vercel-forwarded-for"
+        ? configuredHeader
+        : "x-nf-client-connection-ip"
+      : configuredHeader || "x-vercel-forwarded-for";
   const forwarded = request.headers.get(proxyHeader)?.split(",")[0]?.trim();
   const address = forwarded || (process.env.NODE_ENV === "development" ? "127.0.0.1" : "unknown");
   const salt = process.env.RATE_LIMIT_SALT;

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { databaseUnavailable } from "@/lib/api";
-import { sendRsvpNotification } from "@/lib/email";
+import { sendRsvpNotification, type RsvpForEmail } from "@/lib/email";
 import { getSupabase } from "@/lib/supabase";
 
 export const runtime = "nodejs";
@@ -20,8 +20,7 @@ export async function GET(request: NextRequest) {
     console.error("email_retry_claim_failed", error.code);
     return NextResponse.json({ error: "Retry job unavailable" }, { status: 503 });
   }
-  for (const rsvp of data || []) {
-    await sendRsvpNotification(rsvp);
-  }
-  return NextResponse.json({ processed: data?.length || 0 });
+  const notifications = (data || []) as RsvpForEmail[];
+  await Promise.all(notifications.map((rsvp) => sendRsvpNotification(rsvp)));
+  return NextResponse.json({ processed: notifications.length });
 }

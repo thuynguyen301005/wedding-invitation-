@@ -93,4 +93,7 @@ export const wedding = {
 } as const;
 
 export const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "http://localhost:3000";
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") ||
+  process.env.URL?.replace(/\/$/, "") ||
+  process.env.DEPLOY_PRIME_URL?.replace(/\/$/, "") ||
+  "http://localhost:3000";
